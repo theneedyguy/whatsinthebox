@@ -1,0 +1,252 @@
+{{template "header".}}
+<div class="p-5 text-center bg-body-tertiary">
+    <h1 class="mb-3">What's in the Box</h1>
+    <h4 class="mb-3">Keep track of your storage box contents</h4>
+    <span class="badge rounded-pill badge-primary">{{ .version }}</span>
+</div>
+<br />
+<div class="container-md">
+    <div class="ms-3 me-auto">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <h2>Boxes</h2>
+            <div class="row">
+                <div class="col">
+                    <button type="button"
+                            class="btn btn-success new-box"
+                            data-mdb-ripple-init
+                            data-mdb-modal-init
+                            data-mdb-target="#exampleModal">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button type="button"
+                            class="btn btn-primary new-box"
+                            data-mdb-ripple-init
+                            data-mdb-modal-init
+                            data-mdb-target="#searchModal">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+            </div>
+        </li>
+    </div>
+    <hr />
+    <ul class="list-group list-group-light">
+        {{range $box := .boxes}}
+        <!-- <div class="text-muted">Created at: {{ $box.CreatedAt | formatAsDate }}</div> -->
+        <li class="list-group-item d-flex justify-content-between align-items-center border-0">
+            <a href="/box/{{ $box.ID }}"
+               class="list-group-item list-group-item-action px-3 border-0">
+                <div>
+                    <div class="fw-bold">{{ $box.Name }}</div>
+                    <span class="badge rounded-pill badge-primary">{{ $box.Label.String }}</span>
+                </div>
+            </a>
+            <button type="button"
+                    class="btn btn-warning edit-box"
+                    value="{{ $box.ID }}"
+                    data-mdb-ripple-init
+                    data-mdb-modal-init
+                    data-mdb-target="#exampleModal"
+                    data-name="{{ $box.Name }}"
+                    data-id="{{ $box.ID }}"
+                    data-label="{{ $box.Label.String }}">
+                <i class="fa-solid fa-pencil"></i>
+            </button>
+            &nbsp;
+            <button type="button"
+                    class="btn btn-danger rm-box"
+                    value="{{ $box.ID }}"
+                    data-mdb-ripple-init>
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </li>
+        {{ end }}
+    </ul>
+</div>
+<!-- Modal -->
+<div class="modal fade"
+     id="exampleModal"
+     tabindex="-1"
+     aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Create new box</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-mdb-ripple-init
+                        data-mdb-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/box/create"
+                      id="update-form"
+                      method="post"
+                      data-bitwarden-watching="1"
+                      enctype="multipart/form-data">
+                    <fieldset>
+                        <div class="form-group">
+                            <label for="name" class="form-label mt-4">Box name:</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="item_name"
+                                   id="item_name"
+                                   placeholder="Box Name"
+                                   value=""
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label for="label" class="form-label mt-4">Label:</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="item_label"
+                                   id="item_label"
+                                   placeholder="Box Label"
+                                   value=""
+                                   required>
+                        </div>
+                        <br />
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-check"></i> Save
+                        </button>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade"
+     id="searchModal"
+     tabindex="-1"
+     aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Find boxes</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-mdb-ripple-init
+                        data-mdb-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <fieldset>
+                    <div class="form-group">
+                        <label for="name" class="form-label mt-4">Search by name or label:</label>
+                        <input type="text"
+                               class="form-control"
+                               id="searchInput"
+                               placeholder="Name or Label"
+                               value=""
+                               autofocus>
+                    </div>
+                </fieldset>
+                <br />
+                <ul id="results" class="list-group list-group-light">
+                    <li class="list-group-item d-flex justify-content-between align-items-center border-0"></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        <li class="page-item">
+            {{ if gt .CurrentPage 1 }}
+            <a class="page-link" href="?page={{ sub .CurrentPage 1 }}">Previous</a>
+            {{ end }}
+        </li>
+        {{ range $i := seq 1 .TotalPages }}
+        {{ if eq $i $.CurrentPage }}
+        <li class="page-item active">
+            <a class="page-link" href="?page={{$i}}">{{$i}}</a>
+        </li>
+        {{ end }}
+        {{ end }}
+        {{ if lt .CurrentPage .TotalPages }}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ add .CurrentPage 1 }}">Next</a>
+        </li>
+        {{ end }}
+    </ul>
+</nav>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+
+        // Event listener for keystrokes in the search input
+        $('#searchInput').on('keyup', function() {
+            var query = $(this).val(); // Get the current value of the input
+
+            // Check if the input is not empty before making the request
+            if (query.length > 0) {
+                $.ajax({
+                    url: '/api/v0/box', // Replace with your API endpoint
+                    type: 'GET',
+                    data: {
+                        search: query
+                    }, // Send the query as a parameter (e.g., "q")
+                    success: function(response) {
+                        console.log(response.result)
+                        // Update the results div with the returned JSON
+                        var resultsHtml = '';
+                        if (response && response.result && response.result.length) {
+                            response.result.forEach(function(item) {
+                                resultsHtml += '<a href="/box/' + item.id + '"> <li class="list-group-item d-flex justify-content-between align-items-center border-0">' + item.name + '<span class="badge rounded-pill badge-primary">' + item.label + '</span></li></a>'; // Customize how you display each item
+                            });
+                        } else {
+                            resultsHtml = 'No results found.';
+                        }
+                        $('#results').html(resultsHtml); // Update the results
+                    },
+                    error: function() {
+                        $('#results').html('Error retrieving data.');
+                    }
+                });
+            } else {
+                $('#results').html(''); // Clear results if input is empty
+            }
+        });
+
+
+
+        $('.rm-box').click(function() {
+            data = $(this).attr("value")
+            $.ajax({
+                url: '/box/delete',
+                type: 'DELETE',
+                contentType: "application/json",
+                data: JSON.stringify({
+                    id: data
+                }),
+                success: function(result) {
+                    location.reload();
+                },
+                error: function(result) {
+                    alert("Error" + result.responseText);
+                }
+            });
+        });
+    });
+
+    $(document).on("click", ".edit-box", function() {
+        var name = $(this).data('name');
+        var label = $(this).data('label');
+        var id = $(this).data('id');
+        $("#update-form").attr("action", "/box/" + id + "/edit");
+        $("#item_name").val(name);
+        $("#item_label").val(label);
+        $("#exampleModalLabel").text("Edit Box");
+    });
+
+    $(document).on("click", ".new-box", function() {
+        $("#update-form").attr("action", "/box/create?page={{ .CurrentPage}}");
+        $("#item_name").val("");
+        $("#item_label").val("");
+        $("#exampleModalLabel").text("Create new box");
+    });
+</script>
+{{template "footer"}}

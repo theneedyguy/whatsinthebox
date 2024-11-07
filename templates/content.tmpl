@@ -1,0 +1,300 @@
+{{template "header" . }}
+<style>
+    .word-wrap {
+        word-wrap: break-word;
+        /* Break words if needed */
+        word-break: break-word;
+        /* For even more aggressive word breaking */
+        white-space: normal;
+        /* Ensure text breaks naturally */
+    }
+</style>
+<div class="p-5 text-center bg-body-tertiary">
+    <h1 class="mb-3">{{ (index .contents 0).BoxName }}</h1>
+    <h4 class="mb-3">
+        <span class="badge badge-primary">{{ (index .contents 0).BoxLabel.String }}</span>
+    </h4>
+    <button class="btn btn-primary mb-3"
+            type="button"
+            data-mdb-collapse-init
+            data-mdb-ripple-init
+            data-mdb-target="#qr"
+            aria-expanded="false"
+            aria-controls="qr">
+        <i class="fa-solid fa-qrcode"></i>
+    </button>
+    <!-- Collapsed content -->
+    <div class="collapse" id="qr">
+        {{ .QRCode }}
+        <div class="container">
+            <div class="note note-secondary mb-3">
+                <strong>Note:</strong> When scanned, this QR-Code will open this page. Print it out and attach it to your box.
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<div class="container-md">
+    <div class="ms-3 me-auto">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <h2>Contents</h2>
+            <button type="button"
+                    class="btn btn-success new-item"
+                    data-mdb-modal-init
+                    data-mdb-target="#exampleModal"
+                    data-boxid="{{ (index .contents 0).BoxID }}">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </li>
+    </div>
+    <hr />
+    <ul class="list-group list-group-light">
+        {{range $content := .contents}}
+        {{ if $content.ContentID.Valid }}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="ms-3 me-auto">
+                <div class="fw-bold word-wrap">{{ $content.Name.Value }}</div>
+                <span class="badge badge-primary rounded-pill">Amount: {{ $content.Quantity.Value }}</span>
+            </div>
+            <button type="button"
+                    class="btn btn-warning edit-item"
+                    data-mdb-ripple-init
+                    data-mdb-modal-init
+                    data-mdb-target="#exampleModal"
+                    data-name="{{ $content.Name.Value }}"
+                    data-id="{{ $content.ContentID.Value }}"
+                    data-amount="{{ $content.Quantity.Value }}"
+                    data-boxid="{{ $content.BoxID }}">
+                <i class="fa-solid fa-pencil"></i>
+            </button>
+            <p>&nbsp;</p>
+            <button type="button"
+                    class="btn btn-primary mv-item"
+                    data-mdb-ripple-init
+                    data-mdb-modal-init
+                    data-mdb-target="#moveModal"
+                    data-id="{{ $content.ContentID.Value }}"
+                    data-boxid="{{ $content.BoxID }}">
+                <i class="fa-solid fa-up-down-left-right"></i>
+            </button>
+            <p>&nbsp;</p>
+            <button type="button"
+                    class="btn btn-danger rm-item"
+                    data-mdb-ripple-init
+                    value="{{ $content.ContentID.Int64 }}">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </li>
+    {{ else }}
+        <!--No Content-->
+        <p>It's empty here...</p>
+        {{end}}
+        {{end}}
+    </ul>
+</div>
+<!-- Edit Modal -->
+<div class="modal fade"
+     id="exampleModal"
+     tabindex="-1"
+     aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Edit Item</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-mdb-ripple-init
+                        data-mdb-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/content/edit/0"
+                      id="update-form"
+                      method="post"
+                      data-bitwarden-watching="1"
+                      enctype="multipart/form-data">
+                    <fieldset>
+                        <div class="form-group">
+                            <label for="name" class="form-label mt-4">Item name:</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="item_name"
+                                   id="item_name"
+                                   placeholder="Item Name"
+                                   value=""
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label for="amount" class="form-label mt-4">Amount</label>
+                            <input type="number"
+                                   class="form-control"
+                                   name="item_amount"
+                                   id="item_amount"
+                                   placeholder="1"
+                                   value=""
+                                   min="1"
+                                   required>
+                        </div>
+                        <br />
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-check"></i> Save
+                        </button>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Move Modal -->
+<div class="modal fade"
+     id="moveModal"
+     tabindex="-1"
+     aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Move Item</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-mdb-ripple-init
+                        data-mdb-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="moveForm" data-bitwarden-watching="1">
+                    <fieldset>
+                        <div class="form-group">
+                            <div class="form-group">
+                                <label for="box" class="form-label mt-4">Target Box</label>
+                                <select class="form-select" id="target_box" name="targetBox" required></select>
+                                <input type="hidden" name="sourceBox" id="source_box" value="">
+                                <input type="hidden" name="sourceItem" id="source_item" value="">
+                            </div>
+                        </div>
+                        <br />
+                        <button type="submit" class="btn btn-primary">Move</button>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+
+
+        $('#moveForm').on('submit', function(e) {
+            e.preventDefault(); // Prevent form from submitting
+
+            // Serialize form data to JSON, including select values
+            var formData = {};
+
+            // Get the value of the select input
+            formData['targetBox'] = parseInt($('select[name="targetBox"]').val(), 10); // Get selected option value
+
+            // Get the values for other inputs (e.g., text inputs)
+            $(this).find('input').each(function() {
+                if ($(this).attr('name')) { // Check if the input has a name
+                    formData[$(this).attr('name')] = parseInt($(this).val(), 10);
+                }
+            });
+
+            // Send the JSON data via AJAX
+            $.ajax({
+                url: '/api/v0/item/move', // Your API endpoint
+                type: 'PATCH',
+                contentType: 'application/json', // Indicate JSON payload
+                data: JSON.stringify(formData), // Send the form data as JSON
+                success: function(response) {
+                    console.log('Form submitted successfully', response);
+                    location.reload();
+                },
+                error: function(error) {
+                    console.error('Error submitting form', error);
+                }
+            });
+        });
+
+
+
+
+
+        $.ajax({
+            url: '/api/v0/box',
+            type: 'GET',
+            contentType: "application/json",
+            success: function(result) {
+                console.log(result.result);
+                result.result.forEach(function(item) {
+                    var newOption = $('<option>', {
+                        value: item.id,
+                        text: item.name + " | Label: " + item.label,
+                    });
+                    if (item.id != "{{ (index .contents 0).BoxID }}") {
+                        $('#target_box').append(newOption);
+                    }
+                });
+
+            },
+            error: function(result) {
+                alert("Error" + result.responseText);
+            }
+        });
+
+
+
+        $('.rm-item').click(function() {
+            data = $(this).attr("value")
+            $.ajax({
+                url: '/item',
+                type: 'DELETE',
+                contentType: "application/json",
+                data: JSON.stringify({
+                    id: data
+                }),
+                success: function(result) {
+                    location.reload();
+                },
+                error: function(result) {
+                    alert("Error" + result.responseText);
+                }
+            });
+        });
+    });
+
+
+    $(document).on("click", ".edit-item", function() {
+        var name = $(this).data('name');
+        var amount = $(this).data('amount');
+        var id = $(this).data('id');
+        var boxid = $(this).data('boxid');
+        $("#update-form").attr("action", "/box/" + boxid + "/edit/" + id);
+        $("#item_name").val(name);
+        $("#item_amount").val(amount);
+        $("#exampleModalLabel").text("Edit Item");
+    });
+
+
+
+
+    $(document).on("click", ".new-item", function() {
+        var boxid = $(this).data('boxid');
+        $("#update-form").attr("action", "/box/" + boxid + "/create");
+        $("#item_name").val("");
+        $("#item_amount").val("1");
+        $("#exampleModalLabel").text("Add new item");
+    });
+
+
+    $(document).on("click", ".mv-item", function() {
+        var id = $(this).data('id');
+        var boxid = $(this).data('boxid');
+        $("#source_box").val(boxid);
+        $("#source_item").val(id);
+
+    });
+</script>
+{{template "footer"}}
