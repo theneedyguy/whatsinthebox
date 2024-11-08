@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Define Database struct with database file path as field
 type Database struct {
 	DBFilePath string
 }
@@ -25,6 +26,7 @@ func (ns JSONNullString) MarshalJSON() ([]byte, error) {
 	return json.Marshal(nil)
 }
 
+// Define box struct with json marshalling config
 type Box struct {
 	ID        int            `json:"id"`
 	Name      string         `json:"name"`
@@ -32,6 +34,7 @@ type Box struct {
 	CreatedAt time.Time      `json:"created_at"`
 }
 
+// Define box content struct
 type BoxContent struct {
 	BoxID     int
 	BoxName   string
@@ -42,8 +45,8 @@ type BoxContent struct {
 	AddedAt   sql.NullTime
 }
 
+// Initializes the database and creates the database with the provided field value for DBFilePath
 func (d *Database) Init() *sql.DB {
-
 	db, err := sql.Open("sqlite3", d.DBFilePath)
 	if err != nil {
 		log.Fatal(err)
@@ -71,6 +74,7 @@ func (d *Database) Init() *sql.DB {
 	return db
 }
 
+// Queries all boxes from database
 func (d *Database) GetBoxesTotal(db *sql.DB) (int, error) {
 	query := `SELECT COUNT(*) AS box_count FROM boxes;`
 	var boxCount int
@@ -82,6 +86,8 @@ func (d *Database) GetBoxesTotal(db *sql.DB) (int, error) {
 	return boxCount, nil
 }
 
+// Get a certian amount of boxes using LIMIT and OFFSET
+// Used to paginate boxes
 func (d *Database) GetBoxesPaginated(db *sql.DB, page int, pageSize int) ([]Box, error) {
 	offset := (page * pageSize) / pageSize
 
@@ -108,6 +114,7 @@ func (d *Database) GetBoxesPaginated(db *sql.DB, page int, pageSize int) ([]Box,
 	return boxes, nil
 }
 
+// Database query used to get all boxes by name or label value
 func (d *Database) GetBoxesByTextV0(db *sql.DB, searchText string) ([]Box, error) {
 	query := `
 	SELECT id, name, label, created_at
@@ -136,6 +143,7 @@ func (d *Database) GetBoxesByTextV0(db *sql.DB, searchText string) ([]Box, error
 	return boxes, nil
 }
 
+// Returns ALL boxes from database (unused right now since there is no full REST API)
 func (d *Database) GetBoxes(db *sql.DB) ([]Box, error) {
 	query := `SELECT id, label, name, created_at FROM boxes`
 	rows, err := db.Query(query)
@@ -161,6 +169,7 @@ func (d *Database) GetBoxes(db *sql.DB) ([]Box, error) {
 	return boxes, nil
 }
 
+// Get all content for a certain box using LEFT JOIN to join the box and content properties by joining the foreign key from the content with the box id
 func (d *Database) GetBoxContent(db *sql.DB, boxID int) ([]BoxContent, error) {
 	query := `
     SELECT 
@@ -202,6 +211,7 @@ func (d *Database) GetBoxContent(db *sql.DB, boxID int) ([]BoxContent, error) {
 	return boxContents, nil
 }
 
+// Updates an item with new values
 func (d *Database) UpdateBoxContent(db *sql.DB, contentID int, newName string, newQuantity int) error {
 	query := `UPDATE contents SET name = ?, quantity = ? WHERE id = ?`
 	result, err := db.Exec(query, newName, newQuantity, contentID)
@@ -219,6 +229,7 @@ func (d *Database) UpdateBoxContent(db *sql.DB, contentID int, newName string, n
 	return nil
 }
 
+// Inserts a new box into the boxes table
 func (d *Database) CreateBox(db *sql.DB, name string, label string) error {
 	query := `INSERT INTO boxes (name, label) VALUES (?, ?)`
 	result, err := db.Exec(query, name, label)
@@ -233,6 +244,7 @@ func (d *Database) CreateBox(db *sql.DB, name string, label string) error {
 	return nil
 }
 
+// Deletes a box and all items belonging to it with a atomic transaction
 func (d *Database) DeleteBox(db *sql.DB, id int) error {
 	// Start a transaction
 	tx, err := db.Begin()
@@ -268,6 +280,7 @@ func (d *Database) DeleteBox(db *sql.DB, id int) error {
 	return nil
 }
 
+// Update a box with new values to fields
 func (d *Database) UpdateBox(db *sql.DB, id int, newName string, newLabel string) error {
 	query := `UPDATE boxes SET name = ?, label = ? WHERE id = ?`
 	result, err := db.Exec(query, newName, newLabel, id)
@@ -285,6 +298,7 @@ func (d *Database) UpdateBox(db *sql.DB, id int, newName string, newLabel string
 	return nil
 }
 
+// Creates an item in a certain box
 func (d *Database) CreateItem(db *sql.DB, boxId int, name string, quantity int) error {
 	query := `INSERT INTO contents (name, quantity, box_id) VALUES (?, ?, ?)`
 	result, err := db.Exec(query, name, quantity, boxId)
@@ -299,6 +313,7 @@ func (d *Database) CreateItem(db *sql.DB, boxId int, name string, quantity int) 
 	return nil
 }
 
+// Moves one item to a new box with an atomic transaction
 func (d *Database) MoveItem(db *sql.DB, sourceBoxID, destBoxID, contentId int) error {
 	query := `
 	UPDATE contents
@@ -316,7 +331,7 @@ func (d *Database) MoveItem(db *sql.DB, sourceBoxID, destBoxID, contentId int) e
 			tx.Rollback()
 		}
 	}()
-
+	// Execute the transaction
 	_, err = tx.Exec(query, destBoxID, sourceBoxID, contentId)
 	if err != nil {
 		return err
@@ -329,6 +344,7 @@ func (d *Database) MoveItem(db *sql.DB, sourceBoxID, destBoxID, contentId int) e
 	return nil
 }
 
+// Delete an item from a box with an atomic transaction
 func (d *Database) DeleteItem(db *sql.DB, id int) error {
 	// Start a transaction
 	tx, err := db.Begin()
