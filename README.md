@@ -1,3 +1,6 @@
+[![Docker Image CI](https://github.com/theneedyguy/whatsinthebox/actions/workflows/build.yaml/badge.svg?event=push)](https://github.com/theneedyguy/whatsinthebox/actions/workflows/build.yaml)
+[![Code style: djLint](https://img.shields.io/badge/html%20style-djLint-blue.svg)](https://github.com/djlint/djlint)
+
 # What's in the Box (WITB)
 
 __What's in the Box__ is a simple storage organization solution aimed to help you identify stuff that you've stored in physical locations such as boxes or containers. 
