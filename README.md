@@ -49,7 +49,13 @@ The app is designed to run inside a container although building and running it o
 | DB       	| Path to the database (will be generated if it does not exist) 	| /tmp/boxes.db 	|
 | HTTP_SECURE_SCHEMA       	| Used to correctly set http schema [http / https] for the QR code generation  	| 0 	|
 
+### Docker
 
+To run __What's in the Box__ in docker you can run this command below
+This will run the app with a volume mounted from the working directory mounted to /tmp in the container where the database will be written to.
+It will also make the site available via port 8088 bound to the host.
+
+`docker run -d -p "8088:8088" -v $(pwd):/tmp ghcr.io/theneedyguy/whatsinthebox`
 
 ## Screenshots
 

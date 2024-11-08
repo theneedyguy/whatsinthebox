@@ -1,4 +1,14 @@
 {{template "header".}}
+<style>
+    .word-wrap {
+        word-wrap: break-word;
+        /* Break words if needed */
+        word-break: break-word;
+        /* For even more aggressive word breaking */
+        white-space: normal;
+        /* Ensure text breaks naturally */
+    }
+</style>
 <div class="p-5 text-center bg-body-tertiary">
     <h1 class="mb-3">What's in the Box</h1>
     <h4 class="mb-3">Keep track of your storage box contents</h4>
@@ -37,7 +47,7 @@
             <a href="/box/{{ $box.ID }}"
                class="list-group-item list-group-item-action px-3 border-0">
                 <div>
-                    <div class="fw-bold">{{ $box.Name }}</div>
+                    <div class="fw-bold word-wrap">{{ $box.Name }}</div>
                     <span class="badge rounded-pill badge-primary">{{ $box.Label.String }}</span>
                 </div>
             </a>

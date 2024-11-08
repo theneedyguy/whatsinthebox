@@ -26,7 +26,7 @@ var (
 
 const (
 	itemsPerPage = 5
-	version      = "v0.5.1"
+	version      = "v0.5.2"
 	qrCodeSize   = 156
 )
 
